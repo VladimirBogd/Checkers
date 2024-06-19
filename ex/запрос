@@ -1,0 +1,23 @@
+SELECT t.id AS tournament_id,
+       t.name AS tournament_name,
+       t.location,
+       t.date,
+       p.id AS participant_id,
+       p.full_name,
+       p.rank,
+       p.gender,
+       p.birth_date,
+       COALESCE(tr.points, 0) AS points,
+       COALESCE(tr.place, 0) AS place
+  FROM tournaments t
+       JOIN
+       tournament_participants tp ON t.id = tp.tournament_id
+       JOIN
+       participants p ON tp.participant_id = p.id
+       LEFT JOIN
+       tournament_results tr ON t.id = tr.tournament_id AND 
+                                p.id = tr.participant_id
+ WHERE t.id = ?-- Здесь указываем ID интересующего турнира
+ ORDER BY tr.place;
+
+;

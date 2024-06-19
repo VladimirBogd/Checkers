@@ -1,0 +1,339 @@
+@startuml
+
+package presentation.gui {
+    class Main {
+        + main(args: String[]): void
+    }
+
+    package menuwindow {
+        class MenuWindowController {
+            - view: MenuWindowView
+            + MenuWindowController(view: MenuWindowView)
+            - initController(): void
+            + getView(): MenuWindowView
+        }
+
+        class MenuWindowView {
+            - frame: JFrame
+            - titleLabel: JLabel
+            - participantsButton: JButton
+            - tournamentsButton: JButton
+            - scoresButton: JButton
+            - exitButton: JButton
+            - imageLabel: JLabel
+            + MenuWindowView()
+            - initComponents(): void
+            - placeComponents(): void
+        }
+    }
+
+    package participantwindow {
+        class ParticipantsWindowController {
+            - view: ParticipantsWindowView
+            - useCase: ParticipantUseCase
+            - participantForm: ParticipantForm
+            + ParticipantsWindowController(useCase: ParticipantUseCase, menuWindowController: MenuWindowController)
+            - initController(menuWindowController: MenuWindowController): void
+        }
+
+        class ParticipantsWindowView {
+            - frame: JFrame
+            - table: JTable
+            - addButton: JButton
+            - editButton: JButton
+            - deleteButton: JButton
+            - goToMenuButton: JButton
+            + ParticipantsWindowView(menuWindowController: MenuWindowController)
+            - initializeFrame(): void
+            - initializeTable(): void
+        }
+
+        class ParticipantsTableModel extends AbstractTableModel {
+            - participants: List<Participant>
+            - columnNames: String[]
+            + ParticipantsTableModel(participants: List<Participant>)
+        }
+    }
+
+    package tournamentwindow {
+        class TournamentsWindowView {
+            - frame: JFrame
+            - table: JTable
+            - addButton: JButton
+            - editButton: JButton
+            - deleteButton: JButton
+            - gamesButton: JButton
+            - goToMenuButton: JButton
+            + TournamentsWindowView(menuWindowController: MenuWindowController)
+            - initializeFrame(): void
+            - initializeTable(): void
+            - initializeWindowClosingHandler(menuWindowController: MenuWindowController): void
+        }
+
+        class TournamentsWindowController {
+            - view: TournamentsWindowView
+            - useCase: TournamentUseCase
+            - tournamentForm: TournamentForm
+            - model: TournamentsTableModel
+            + TournamentsWindowController(useCase: TournamentUseCase, menuWindowController: MenuWindowController)
+            - initController(menuWindowController: MenuWindowController): void
+        }
+
+        class TournamentsTableModel extends AbstractTableModel {
+            - tournaments: List<Tournament>
+            - columnNames: String[]
+            + TournamentsTableModel(tournaments: List<Tournament>)
+        }
+
+        class TournamentForm {
+            - useCase: TournamentUseCase
+            - parentController: TournamentsWindowController
+            - tournamentId: Integer
+            - contentPanel: JPanel
+            - frame: JFrame
+            - nameField: JTextField
+            - locationField: JTextField
+            - dateField: JTextField
+            + TournamentForm(tournamentId: Integer, useCase: TournamentUseCase, parentController: TournamentsWindowController)
+            - initialize(): void
+            - createFrame(): void
+        }
+    }
+
+    package statwindow {
+        class StatWindowView {
+            - frame: JFrame
+            - table: JTable
+            - gamesButton: JButton
+            - goToMenuButton: JButton
+            + StatWindowView(menuWindowController: MenuWindowController)
+            - initializeFrame(): void
+            - initializeTable(): void
+            - initializeWindowClosingHandler(menuWindowController: MenuWindowController): void
+        }
+
+        class StatWindowController {
+            - view: StatWindowView
+            - useCase: TournamentUseCase
+            + StatWindowController(useCase: TournamentUseCase, menuWindowController: MenuWindowController)
+            - initController(menuWindowController: MenuWindowController): void
+        }
+    }
+
+    package gameswindow {
+        class GamesWindowView {
+            - frame: JFrame
+            - participantsTable: JTable
+            - pointsTable: JTable
+            - resultsTable: JTable
+            - participantsButton: JButton
+            - resultsButton: JButton
+            - startTournament: JButton
+            - goToMenuButton: JButton
+            + GamesWindowView(tournamentsWindowController: TournamentsWindowController)
+            + GamesWindowView(statWindowController: StatWindowController)
+            - initializeFrame(): void
+            - initializeTablePanel(): void
+            - initializeButtonsPanel(): JPanel
+            - initializeWindowClosingHandler(tournamentsWindowController: TournamentsWindowController): void
+            - initializeWindowClosingHandler(statWindowController: StatWindowController): void
+        }
+
+        class GamesWindowController {
+            - view: GamesWindowView
+            - useCase: GamesUseCase
+            - tournamentId: int
+            + GamesWindowController(useCase: GamesUseCase, tournamentId: int, tournamentsWindowController: TournamentsWindowController)
+            + GamesWindowController(useCase: GamesUseCase, tournamentId: int, statWindowController: StatWindowController)
+            - initControllerGoToMenuButton(tournamentsWindowController: TournamentsWindowController): void
+            - initControllerGoToMenuButton(statWindowController: StatWindowController): void
+            - initController(): void
+        }
+
+        class GamesResultsTableModel extends AbstractTableModel {
+            - gamesResults: List<Games>
+            - columnNames: String[]
+            - isFinished: boolean
+            + GamesResultsTableModel(gamesResults: List<Games>, isFinished: boolean)
+        }
+
+        class GamesPointsTableModel extends AbstractTableModel {
+            - gamesPoints: List<Games>
+            - arrayPoints: Double[][]
+            - gamesParticipants: List<Games>
+            - columnNames: String[]
+            + GamesPointsTableModel(gamesParticipants: List<Games>, gamesPoints: List<Games>, isFinished: boolean)
+        }
+
+        class GamesParticipantsTableModel extends AbstractTableModel {
+        }
+
+        class GamesFormParticipants {
+            - frame: JFrame
+            - useCase: GamesUseCase
+            - parentController: GamesWindowController
+            - tournamentId: int
+            + GamesFormParticipants(tournamentId: int, useCase: GamesUseCase, parentController: GamesWindowController)
+            - initComponents(): void
+            - placeComponents(): void
+            - initListeners(): void
+        }
+    }
+}
+
+package presentation.config {
+    class AppConfig {
+        - static connection: Connection
+        + provideParticipantUseCase(): ParticipantUseCase
+        + provideTournamentUseCase(): TournamentUseCase
+        + provideGamesUseCase(): GamesUseCase
+    }
+}
+
+package domain.usecase {
+    class ParticipantUseCase {
+        - repository: ParticipantRepository
+        + ParticipantUseCase(repository: ParticipantRepository)
+        + getAllParticipants(): List<Participant>
+        + addParticipant(participant: Participant): void
+        + updateParticipant(participant: Participant): void
+        + deleteParticipant(id: int): void
+        + getNextId(): int
+    }
+
+    class TournamentUseCase {
+            - repository: TournamentRepository
+            + TournamentUseCase(repository: TournamentRepository)
+            + getAllTournaments(): List<Tournament>
+            + addTournament(tournament: Tournament): void
+            + updateTournament(tournament: Tournament): void
+            + deleteTournament(id: int): void
+            + getNextId(): int
+        }
+
+        class GamesUseCase {
+            - repository: GamesRepository
+            + GamesUseCase(repository: GamesRepository)
+            + getAllGames(tournamentId: int): List<Games>
+            + addGame(game: Games): void
+            + updateGame(game: Games): void
+            + deleteGame(id: int): void
+            + getNextId(): int
+            + calculateResults(games: List<Games>): List<Games>
+        }
+    }
+
+    package domain.entity {
+        class Participant {
+            - id: int
+            - name: String
+            - rank: String
+            - gender: String
+            - birthDate: Date
+            + getId(): int
+            + getName(): String
+            + getRank(): String
+            + getGender(): String
+            + getBirthDate(): Date
+            + setId(id: int): void
+            + setName(name: String): void
+            + setRank(rank: String): void
+            + setGender(gender: String): void
+            + setBirthDate(birthDate: Date): void
+        }
+
+        class Tournament {
+            - id: int
+            - name: String
+            - location: String
+            - date: Date
+            + getId(): int
+            + getName(): String
+            + getLocation(): String
+            + getDate(): Date
+            + setId(id: int): void
+            + setName(name: String): void
+            + setLocation(location: String): void
+            + setDate(date: Date): void
+        }
+
+        class Games {
+            - id: int
+            - participant1Id: int
+            - participant2Id: int
+            - participant1Points: int
+            - participant2Points: int
+            - place: int
+            - tournamentId: int
+            + getId(): int
+            + getParticipant1Id(): int
+            + getParticipant2Id(): int
+            + getParticipant1Points(): int
+            + getParticipant2Points(): int
+            + getPlace(): int
+            + getTournamentId(): int
+            + setId(id: int): void
+            + setParticipant1Id(participant1Id: int): void
+            + setParticipant2Id(participant2Id: int): void
+            + setParticipant1Points(participant1Points: int): void
+            + setParticipant2Points(participant2Points: int): void
+            + setPlace(place: int): void
+            + setTournamentId(tournamentId: int): void
+        }
+    }
+
+    package domain.repository {
+        interface ParticipantRepository {
+            + getAllParticipants(): List<Participant>
+            + addParticipant(participant: Participant): void
+            + updateParticipant(participant: Participant): void
+            + deleteParticipant(id: int): void
+            + getNextId(): int
+        }
+
+        interface TournamentRepository {
+            + getAllTournaments(): List<Tournament>
+            + addTournament(tournament: Tournament): void
+            + updateTournament(tournament: Tournament): void
+            + deleteTournament(id: int): void
+            + getNextId(): int
+        }
+
+        interface GamesRepository {
+            + getAllGames(tournamentId: int): List<Games>
+            + addGame(game: Games): void
+            + updateGame(game: Games): void
+            + deleteGame(id: int): void
+            + getNextId(): int
+        }
+    }
+
+    package data.repository {
+        class ParticipantRepositoryImpl implements ParticipantRepository {
+            - connection: Connection
+            + getAllParticipants(): List<Participant>
+            + addParticipant(participant: Participant): void
+            + updateParticipant(participant: Participant): void
+            + deleteParticipant(id: int): void
+            + getNextId(): int
+        }
+
+        class TournamentRepositoryImpl implements TournamentRepository {
+            - connection: Connection
+            + getAllTournaments(): List<Tournament>
+            + addTournament(tournament: Tournament): void
+            + updateTournament(tournament: Tournament): void
+            + deleteTournament(id: int): void
+            + getNextId(): int
+        }
+
+        class GamesRepositoryImpl implements GamesRepository {
+            - connection: Connection
+            + getAllGames(tournamentId: int): List<Games>
+            + addGame(game: Games): void
+            + updateGame(game: Games): void
+            + deleteGame(id: int): void
+            + getNextId(): int
+        }
+    }
+@enduml
